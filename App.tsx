@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-// Removed: import { Routes, Route, Outlet, useLocation } from 'react-router-dom';
 import DesktopTabbar from './components/DesktopTabbar';
 import BottomNavbar from './components/BottomNavbar';
 import Footer from './components/Footer';
@@ -10,6 +9,8 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useAppStore, applyThemeToDOM } from './store/appStore';
 import { APP_NAME } from './constants';
 import Icon from './components/common/Icon';
+import navimage from './icon/navImage.png'
+import navimageDark from './icon/navImage_darkmode.png'
 
 export type ViewId = 'journal' | 'analytics' | 'settings';
 
@@ -71,17 +72,15 @@ const App: React.FC = () => {
     <div className="flex flex-col min-h-screen bg-backgroundLight dark:bg-backgroundDark">
       <header className="sticky top-0 z-40 bg-cardLight dark:bg-cardDark shadow-soft-md">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center">
-            <Icon name="moon" size={28} className="text-primaryDark dark:text-primaryLight mr-2" />
-            <h1 className="text-2xl font-bold text-primaryDark dark:text-primaryLight">{APP_NAME}</h1>
-          </div>
+          <img src={navimage} className='h-12 dark:hidden' alt="Logo" />
+          <img src={navimageDark} className='h-12 dark:block hidden' alt="Logo" />
           {currentTab && !isMobile && <span className="text-xl text-textLight dark:text-textDark hidden md:block">{currentTab.label}</span>}
           <div className="md:hidden"> {/* Placeholder */}
           </div>
         </div>
         {!isMobile && <DesktopTabbar items={tabItems} currentView={currentView} navigateTo={navigateTo} />}
       </header>
-      
+
       <main className="flex-grow container mx-auto px-4 py-8 relative">
         <AnimatePresence mode="wait">
           <motion.div

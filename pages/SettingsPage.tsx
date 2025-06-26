@@ -1,11 +1,10 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Button from '../components/common/Button';
-import ToggleSwitch from '../components/common/ToggleSwitch';
 import Icon from '../components/common/Icon';
-import { AppData } from '../types';
-import { exportData, importData } from '../utils/exportImport';
+import ToggleSwitch from '../components/common/ToggleSwitch';
 import { BACKUP_REMINDER_INTERVAL_DAYS } from '../constants';
 import { useAppStore } from '../store/appStore';
+import { exportData, importData } from '../utils/exportImport';
 
 const SettingsPage: React.FC = () => {
   const settings = useAppStore(state => state.settings);
@@ -17,10 +16,10 @@ const SettingsPage: React.FC = () => {
   const togglePromptsAction = useAppStore(state => state.togglePrompts);
   const dismissBackupReminderAction = useAppStore(state => state.dismissBackupReminder);
   const importAppStateAction = useAppStore(state => state.importAppState);
-  
+
   const [userNameInput, setUserNameInput] = useState(settings.userName || '');
   const [showPromptsInput, setShowPromptsInput] = useState(settings.showPrompts);
-  const [importMessage, setImportMessage] = useState<{type: 'success' | 'error', text: string} | null>(null);
+  const [importMessage, setImportMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -37,7 +36,7 @@ const SettingsPage: React.FC = () => {
   const saveUserName = () => {
     setUserNameAction(userNameInput);
     // Consider a less intrusive success message, e.g., a temporary toast or inline text
-    alert("User name updated!"); 
+    alert("User name updated!");
   };
 
   const handleTogglePrompts = () => {
@@ -62,22 +61,22 @@ const SettingsPage: React.FC = () => {
       try {
         const imported = await importData(file);
         importAppStateAction(imported);
-        setImportMessage({type: 'success', text: 'Data imported successfully! Your settings and entries have been updated.'});
+        setImportMessage({ type: 'success', text: 'Data imported successfully! Your settings and entries have been updated.' });
       } catch (error) {
         console.error("Import failed:", error);
-        setImportMessage({type: 'error', text: `Import failed: ${error instanceof Error ? error.message : "Unknown error"}. Please ensure the file is a valid SoulSync JSON export.`});
+        setImportMessage({ type: 'error', text: `Import failed: ${error instanceof Error ? error.message : "Unknown error"}. Please ensure the file is a valid SoulSync JSON export.` });
       } finally {
         if (fileInputRef.current) fileInputRef.current.value = "";
       }
     }
   };
-  
+
   const showBackupReminder = (): boolean => {
     if (!settings.lastBackupReminderDismissedTs) return true; // Show if never dismissed
     const daysSinceDismissed = (Date.now() - settings.lastBackupReminderDismissedTs) / (1000 * 60 * 60 * 24);
     return daysSinceDismissed > BACKUP_REMINDER_INTERVAL_DAYS;
   };
-  
+
   const dismissReminder = () => {
     dismissBackupReminderAction();
   }
@@ -93,7 +92,7 @@ const SettingsPage: React.FC = () => {
       {showBackupReminder() && (
         <div className="bg-secondaryLight/30 dark:bg-secondaryDark/20 border-l-4 border-secondaryDark dark:border-secondaryLight text-secondaryDark dark:text-secondaryLight/90 p-4 rounded-md shadow-soft-md" role="alert">
           <div className="flex">
-            <div className="py-1"><Icon name="upload" className="mr-3" size={20}/></div>
+            <div className="py-1"><Icon name="upload" className="mr-3" size={20} /></div>
             <div>
               <p className="font-bold">Friendly Reminder!</p>
               <p className="text-sm">It's good practice to back up your journal data periodically. You can export your data below.</p>
@@ -117,7 +116,7 @@ const SettingsPage: React.FC = () => {
               offIcon={<Icon name="sun" size={16} className="text-secondaryDark" />}
             />
           </div>
-           <div className="flex justify-between items-center">
+          <div className="flex justify-between items-center">
             <span className="text-textLight dark:text-textDark">Show Daily Writing Prompts</span>
             <ToggleSwitch
               isOn={showPromptsInput}
@@ -158,10 +157,10 @@ const SettingsPage: React.FC = () => {
           Your journal data is stored locally in your browser. Export it for backup or to move to another device.
         </p>
         <div className="flex flex-col sm:flex-row gap-4">
-          <Button onClick={handleExport} variant="primary" type="button" className="w-full sm:w-auto" leftIcon={<Icon name="download" size={18}/>}>
+          <Button onClick={handleExport} variant="primary" type="button" className="w-full sm:w-auto" leftIcon={<Icon name="download" size={18} />}>
             Export Data (JSON)
           </Button>
-          <Button onClick={handleImportClick} variant="secondary" type="button" className="w-full sm:w-auto" leftIcon={<Icon name="upload" size={18}/>}>
+          <Button onClick={handleImportClick} variant="secondary" type="button" className="w-full sm:w-auto" leftIcon={<Icon name="upload" size={18} />}>
             Import Data (JSON)
           </Button>
           <input
@@ -173,12 +172,12 @@ const SettingsPage: React.FC = () => {
           />
         </div>
         {importMessage && (
-            <p className={`mt-4 text-sm ${importMessage.type === 'success' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                {importMessage.text}
-            </p>
+          <p className={`mt-4 text-sm ${importMessage.type === 'success' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+            {importMessage.text}
+          </p>
         )}
       </section>
-      
+
       <section className={sectionStyle}>
         <h2 className="text-xl font-semibold mb-4 text-textLight dark:text-textDark">About SoulSync</h2>
         <p className="text-sm text-textLight dark:text-textDark opacity-90">

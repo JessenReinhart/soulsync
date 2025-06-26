@@ -1,0 +1,6 @@
+{
+  "name": "SoulSync",
+  "description": "A mindful journaling and mood tracking application to help you understand yourself better. All data is stored locally in your browser.",
+  "requestFramePermissions": [],
+  "prompt": ""
+}

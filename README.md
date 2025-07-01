@@ -47,7 +47,7 @@ It’s fully **offline-first** — no accounts, no backend, just you and your th
    ```bash
    git clone https://github.com/yourusername/soulsync.git
    cd soulsync
-````
+   ```
 
 2. **Install dependencies**
 

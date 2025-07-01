@@ -2,6 +2,7 @@
 
 **SoulSync** is a warm, empathic journaling and mood tracking web app — built with **Vite + React + TypeScript + TailwindCSS + Framer Motion**.  
 It’s fully **offline-first** — no accounts, no backend, just you and your thoughts.
+(PWA Work in Progress)
 
 ## ✨ Features
 

@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import React, { useEffect, useState } from 'react';
 import DesktopTabbar from './components/DesktopTabbar';
 import BottomNavbar from './components/BottomNavbar';
@@ -8,8 +8,6 @@ import AnalyticsPage from './pages/AnalyticsPage';
 import SettingsPage from './pages/SettingsPage';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useAppStore, applyThemeToDOM } from './store/appStore';
-import { APP_NAME } from './constants';
-import Icon from './components/common/Icon';
 import navimage from './icon/navImage.png'
 import ChatPopup from './components/ChatPopup';
 import navimageDark from './icon/navImage_darkmode.png'
@@ -26,6 +24,7 @@ const AppContent: React.FC = () => {
   const theme = useAppStore(state => state.settings.theme);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     applyThemeToDOM(theme);
@@ -52,7 +51,7 @@ const AppContent: React.FC = () => {
   ];
 
   // Determine current view based on URL path
-  const currentPath = window.location.pathname;
+  const currentPath = location.pathname;
   const currentView = (tabItems.find(item => `/${item.viewId}` === currentPath)?.viewId || 'journal') as ViewId;
 
   const handleNavigate = (viewId: ViewId) => {
@@ -75,14 +74,14 @@ const AppContent: React.FC = () => {
       <main className="flex-grow container mx-auto px-4 py-8 relative">
         <AnimatePresence mode="wait">
           <motion.div
-            key={currentView} // Use currentView for transition key
+            key={location.pathname} // Use location.pathname for proper route transitions
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
             className="w-full"
           >
-            <Routes>
+            <Routes location={location}>
               <Route path="/journal" element={<JournalPage />} />
               <Route path="/analytics" element={<AnalyticsPage />} />
               <Route path="/settings" element={<SettingsPage />} />
@@ -93,7 +92,7 @@ const AppContent: React.FC = () => {
       </main>
 
       <Footer />
-      {isMobile && <BottomNavbar items={tabItems} currentView={currentView} navigateTo={handleNavigate} />}
+      {isMobile && <BottomNavbar items={tabItems} />}
       <ChatPopup />
     </div>
   );

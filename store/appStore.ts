@@ -19,7 +19,7 @@ const initialSettings: AppSettings = {
   openRouterApiKey: ''
 };
 
-const initialState: AppData = {
+const initialState: StoreState = {
   entries: [],
   settings: initialSettings,
   isChatOpen: false,

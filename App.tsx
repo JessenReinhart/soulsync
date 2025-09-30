@@ -10,6 +10,7 @@ import { useAppStore, applyThemeToDOM } from './store/appStore';
 import { APP_NAME } from './constants';
 import Icon from './components/common/Icon';
 import navimage from './icon/navImage.png'
+import ChatPopup from './components/ChatPopup';
 import navimageDark from './icon/navImage_darkmode.png'
 
 export type ViewId = 'journal' | 'analytics' | 'settings';
@@ -98,6 +99,7 @@ const App: React.FC = () => {
 
       <Footer />
       {isMobile && <BottomNavbar items={tabItems} currentView={currentView} navigateTo={navigateTo} />}
+      <ChatPopup />
     </div>
   );
 };

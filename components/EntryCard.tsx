@@ -41,7 +41,7 @@ const EntryCard: React.FC<EntryCardProps> = ({ entry, onEdit }) => {
       <div className="flex justify-between items-start mb-3">
         <div>
           <h3 className="text-xl font-semibold text-primaryDark dark:text-primaryLight">
-            {getFormattedDate(entry.entryDate)}
+            {entry.entryDate ? getFormattedDate(entry.entryDate) : 'No Date'}
           </h3>
           <p className="text-xs text-textLight/70 dark:text-textDark/70">
             Logged {timeAgo(new Date(entry.createdAt))}

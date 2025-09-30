@@ -44,7 +44,7 @@ const CalendarHeatmap: React.FC<CalendarHeatmapProps> = ({ entries, year }) => {
 
   const dataByDate: Record<string, { count: number; mood?: MoodLevel }> = {};
   entries.forEach(entry => {
-    if (new Date(entry.entryDate).getFullYear() === currentYear) {
+    if (entry.entryDate && !isNaN(new Date(entry.entryDate).getTime()) && new Date(entry.entryDate).getFullYear() === currentYear) {
       dataByDate[entry.entryDate] = {
         count: (dataByDate[entry.entryDate]?.count || 0) + 1,
         mood: entry.mood || dataByDate[entry.entryDate]?.mood, 

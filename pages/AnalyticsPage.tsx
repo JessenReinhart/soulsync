@@ -1,73 +1,111 @@
-
-import React, { useMemo } from 'react';
-import MoodOverTimeChart from '../components/charts/MoodOverTimeChart';
-import TagFrequencyChart from '../components/charts/TagFrequencyChart';
-import CalendarHeatmap from '../components/charts/CalendarHeatmap';
-import { MoodLevel } from '../types'; // JournalEntry type removed as entries come from store
-import { useAppStore } from '../store/appStore';
-import Icon from '../components/common/Icon'; // For placeholder
-import { MOOD_OPTIONS } from '../constants';
-
+import Button from "@/components/common/Button";
+import React, { useMemo, useState } from "react";
+import ReactMarkdown from "react-markdown";
+import CalendarHeatmap from "../components/charts/CalendarHeatmap";
+import MoodOverTimeChart from "../components/charts/MoodOverTimeChart";
+import TagFrequencyChart from "../components/charts/TagFrequencyChart";
+import Icon from "../components/common/Icon";
+import { MOOD_OPTIONS } from "../constants";
+import { useAppStore } from "../store/appStore";
+import { MoodLevel } from "../types";
+import { getCompletion } from "../utils/openrouter";
 
 const AnalyticsPage: React.FC = () => {
-  const entries = useAppStore(state => state.entries);
+  const entries = useAppStore((state) => state.entries);
+  const { toggleChat, setChatMessages } = useAppStore();
 
   const memoizedEntries = useMemo(() => entries, [entries]);
 
   const averageMoodData = useMemo(() => {
-    const moodEntries = entries.filter(e => e.mood !== undefined);
+    const moodEntries = entries.filter((e) => e.mood !== undefined);
     if (moodEntries.length === 0) return null;
-    const sum = moodEntries.reduce((acc, curr) => acc + (curr.mood as MoodLevel), 0);
+    const sum = moodEntries.reduce(
+      (acc, curr) => acc + (curr.mood as MoodLevel),
+      0,
+    );
     const average = parseFloat((sum / moodEntries.length).toFixed(1));
-    const closestMood = MOOD_OPTIONS.reduce((prev, curr) => 
-        (Math.abs(curr.level - average) < Math.abs(prev.level - average) ? curr : prev)
+    const closestMood = MOOD_OPTIONS.reduce((prev, curr) =>
+      Math.abs(curr.level - average) < Math.abs(prev.level - average)
+        ? curr
+        : prev,
     );
     return {
-        value: average,
-        emoji: closestMood.emoji,
-        label: closestMood.label
+      value: average,
+      emoji: closestMood.emoji,
+      label: closestMood.label,
     };
   }, [entries]);
 
   const journalStreak = useMemo(() => {
     if (entries.length === 0) return 0;
-    const sortedDates = [...new Set(entries.map(e => e.entryDate))]
-      .map(dateStr => new Date(dateStr as string))
+    const sortedDates = [...new Set(entries.map((e) => e.entryDate))]
+      .map((dateStr) => new Date(dateStr as string))
       .sort((a, b) => b.getTime() - a.getTime());
 
     if (sortedDates.length === 0) return 0;
 
     let streak = 0;
-    let today = new Date(); today.setHours(0,0,0,0);
-    let yesterday = new Date(today); yesterday.setDate(today.getDate() -1);
-    
+    let today = new Date();
+    today.setHours(0, 0, 0, 0);
+    let yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+
     // Check if the most recent entry is today or yesterday
-    if (sortedDates[0].getTime() === today.getTime() || sortedDates[0].getTime() === yesterday.getTime()){
-        streak = 1;
-        let currentDate = new Date(sortedDates[0]);
-        for (let i = 1; i < sortedDates.length; i++) {
-            let prevDateExpected = new Date(currentDate);
-            prevDateExpected.setDate(currentDate.getDate() - 1);
-            if (sortedDates[i].getTime() === prevDateExpected.getTime()) {
-                streak++;
-                currentDate = sortedDates[i];
-            } else if (sortedDates[i].getTime() < prevDateExpected.getTime()){ 
-                // Gap in dates, streak broken
-                break;
-            }
-            // If sortedDates[i] is same as currentDate, it's multiple entries on same day, continue checking with currentDate
+    if (
+      sortedDates[0].getTime() === today.getTime() ||
+      sortedDates[0].getTime() === yesterday.getTime()
+    ) {
+      streak = 1;
+      let currentDate = new Date(sortedDates[0]);
+      for (let i = 1; i < sortedDates.length; i++) {
+        let prevDateExpected = new Date(currentDate);
+        prevDateExpected.setDate(currentDate.getDate() - 1);
+        if (sortedDates[i].getTime() === prevDateExpected.getTime()) {
+          streak++;
+          currentDate = sortedDates[i];
+        } else if (sortedDates[i].getTime() < prevDateExpected.getTime()) {
+          // Gap in dates, streak broken
+          break;
         }
+        // If sortedDates[i] is same as currentDate, it's multiple entries on same day, continue checking with currentDate
+      }
     }
     return streak;
   }, [entries]);
 
+  const [summary, setSummary] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleSummarize = async () => {
+    setLoading(true);
+    const prompt = `Summarize the following journal entries, focusing on the user's mood, recurring themes, and potential insights. Provide a compassionate and encouraging summary. The user's name is ${useAppStore.getState().settings.userName || "User"}.\n\nEntries:\n${entries.map((e) => `Date: ${e.entryDate}\nMood: ${e.mood}\nContent: ${e.content}`).join("\n\n")}`;
+
+    try {
+      const completion = await getCompletion([
+        { role: "user", content: prompt },
+      ]);
+      setSummary(completion);
+    } catch (error) {
+      console.error(error);
+      setSummary("There was an error generating the summary.");
+    }
+    setLoading(false);
+  };
+
   if (entries.length === 0) {
     return (
       <div className="text-center py-10 animate-fade-in">
-        <Icon name="barChart" size={60} className="mx-auto text-primaryLight dark:text-primaryDark opacity-50 mb-4" />
-        <h2 className="text-2xl font-semibold text-textLight dark:text-textDark mb-2">Unlock Your Insights</h2>
+        <Icon
+          name="barChart"
+          size={60}
+          className="mx-auto text-primaryLight dark:text-primaryDark opacity-50 mb-4"
+        />
+        <h2 className="text-2xl font-semibold text-textLight dark:text-textDark mb-2">
+          Unlock Your Insights
+        </h2>
         <p className="text-textLight dark:text-textDark opacity-70">
-          Once you start journaling, this space will fill with beautiful visualizations of your journey.
+          Once you start journaling, this space will fill with beautiful
+          visualizations of your journey.
         </p>
       </div>
     );
@@ -75,36 +113,79 @@ const AnalyticsPage: React.FC = () => {
 
   return (
     <div className="space-y-8 animate-fade-in">
-      {/* Title is now part of the App shell (DesktopTabbar or general header) */}
-      
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-center">
         <div className="bg-cardLight dark:bg-cardDark p-6 rounded-xl shadow-soft-lg">
-            <h3 className="text-lg font-semibold text-primaryDark dark:text-primaryLight">Average Mood</h3>
-            {averageMoodData ? (
-                <>
-                    <p className="text-3xl font-bold text-textLight dark:text-textDark mt-2">
-                        {averageMoodData.value}/5 <span className="text-2xl">{averageMoodData.emoji}</span>
-                    </p>
-                    <p className="text-xs text-textLight dark:text-textDark opacity-70">{averageMoodData.label}</p>
-                </>
-            ) : (
-                 <p className="text-3xl font-bold text-textLight dark:text-textDark mt-2">N/A</p>
-            )}
-            <p className="text-xs text-textLight dark:text-textDark opacity-60 mt-1">Based on logged moods</p>
+          <h3 className="text-lg font-semibold text-primaryDark dark:text-primaryLight">
+            Average Mood
+          </h3>
+          {averageMoodData ? (
+            <>
+              <p className="text-3xl font-bold text-textLight dark:text-textDark mt-2">
+                {averageMoodData.value}/5{" "}
+                <span className="text-2xl">{averageMoodData.emoji}</span>
+              </p>
+              <p className="text-xs text-textLight dark:text-textDark opacity-70">
+                {averageMoodData.label}
+              </p>
+            </>
+          ) : (
+            <p className="text-3xl font-bold text-textLight dark:text-textDark mt-2">
+              N/A
+            </p>
+          )}
+          <p className="text-xs text-textLight dark:text-textDark opacity-60 mt-1">
+            Based on logged moods
+          </p>
         </div>
         <div className="bg-cardLight dark:bg-cardDark p-6 rounded-xl shadow-soft-lg">
-            <h3 className="text-lg font-semibold text-primaryDark dark:text-primaryLight">Journaling Streak</h3>
-            <p className="text-3xl font-bold text-textLight dark:text-textDark mt-2">{journalStreak} {journalStreak === 1 ? 'day' : 'days'}</p>
-             <p className="text-xs text-textLight dark:text-textDark opacity-60 mt-1">Keep it up! Consistency is key.</p>
+          <h3 className="text-lg font-semibold text-primaryDark dark:text-primaryLight">
+            Journaling Streak
+          </h3>
+          <p className="text-3xl font-bold text-textLight dark:text-textDark mt-2">
+            {journalStreak} {journalStreak === 1 ? "day" : "days"}
+          </p>
+          <p className="text-xs text-textLight dark:text-textDark opacity-60 mt-1">
+            Keep it up! Consistency is key.
+          </p>
         </div>
       </div>
 
       <MoodOverTimeChart entries={memoizedEntries} />
       <TagFrequencyChart entries={memoizedEntries} />
       <CalendarHeatmap entries={memoizedEntries} />
-      
+
+      <section className="bg-cardLight dark:bg-cardDark p-6 rounded-xl shadow-soft-lg">
+        <h3 className="text-lg font-semibold text-primaryDark dark:text-primaryLight">
+          AI Summary
+        </h3>
+        <p className="text-xs text-textLight dark:text-textDark opacity-60 mt-1 mb-4">
+          Get an AI-powered summary of your recent journal entries.
+        </p>
+        <Button onClick={handleSummarize} disabled={loading}>
+          {loading ? "Generating..." : "Summarize My Journal"}
+        </Button>
+        {summary && (
+          <div className="mt-4 text-textLight dark:text-textDark">
+            <ReactMarkdown>{summary}</ReactMarkdown>
+            <Button
+              onClick={() => {
+                setChatMessages([
+                  { role: "assistant", content: "Here is your summary:" },
+                  { role: "assistant", content: summary },
+                ]);
+                toggleChat(true);
+              }}
+              className="mt-4"
+            >
+              Talk About It
+            </Button>
+          </div>
+        )}
+      </section>
+
       <p className="text-sm text-center text-textLight dark:text-textDark opacity-70 pt-4">
-        Remember, these are just tools. The real insights come from your reflections.
+        Remember, these are just tools. The real insights come from your
+        reflections.
       </p>
     </div>
   );

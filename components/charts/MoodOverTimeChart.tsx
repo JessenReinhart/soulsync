@@ -59,7 +59,7 @@ const MoodOverTimeChart: React.FC<MoodOverTimeChartProps> = ({ entries }) => {
           <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
           <XAxis 
             dataKey="date" 
-            tickFormatter={(tick) => getFormattedDate(tick, { month: 'short', day: 'numeric' })} 
+            tickFormatter={(tick) => tick ? getFormattedDate(tick, { month: 'short', day: 'numeric' }) : ''} 
             stroke={textColor}
             angle={-30}
             textAnchor="end"

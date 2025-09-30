@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { produce } from 'immer';
-import { JournalEntry, AppSettings, Theme, AppData } from '../types';
+import { JournalEntry, AppSettings, Theme, AppData, Message } from '../types';
 import { LOCAL_STORAGE_APP_DATA_KEY } from '../constants';
 
 const getInitialSystemTheme = (): Theme => {
@@ -16,14 +16,20 @@ const initialSettings: AppSettings = {
   userName: '',
   lastBackupReminderDismissedTs: undefined,
   showPrompts: true,
+  openRouterApiKey: ''
 };
 
 const initialState: AppData = {
   entries: [],
   settings: initialSettings,
+  isChatOpen: false,
+  chatMessages: [],
 };
 
-interface StoreState extends AppData {}
+interface StoreState extends AppData {
+  isChatOpen: boolean;
+  chatMessages: Message[];
+}
 
 interface StoreActions {
   addEntry: (entryData: Omit<JournalEntry, 'id' | 'createdAt' | 'updatedAt'> & { id?: string }) => void;
@@ -34,8 +40,12 @@ interface StoreActions {
   setUserName: (name: string) => void;
   dismissBackupReminder: () => void;
   togglePrompts: (show: boolean) => void;
+  setOpenRouterApiKey: (apiKey: string) => void;
   importAppState: (data: AppData) => void;
   getAppState: () => AppData;
+  toggleChat: (isOpen?: boolean) => void;
+  setChatMessages: (messages: Message[]) => void;
+  addChatMessage: (message: Message) => void;
 }
 
 export const useAppStore = create<StoreState & StoreActions>()(
@@ -85,6 +95,10 @@ export const useAppStore = create<StoreState & StoreActions>()(
       togglePrompts: (show) => set(produce((draft: StoreState) => {
         draft.settings.showPrompts = show;
       })),
+
+      setOpenRouterApiKey: (apiKey) => set(produce((draft: StoreState) => {
+        draft.settings.openRouterApiKey = apiKey;
+      })),
       
       importAppState: (data: AppData) => set(produce((draft: StoreState) => {
         draft.entries = data.entries || [];
@@ -116,7 +130,19 @@ export const useAppStore = create<StoreState & StoreActions>()(
           entries: get().entries,
           settings: get().settings,
         };
-      }
+      },
+
+      toggleChat: (isOpen) => set(produce((draft: StoreState) => {
+        draft.isChatOpen = isOpen !== undefined ? isOpen : !draft.isChatOpen;
+      })),
+
+      setChatMessages: (messages) => set(produce((draft: StoreState) => {
+        draft.chatMessages = messages;
+      })),
+
+      addChatMessage: (message) => set(produce((draft: StoreState) => {
+        draft.chatMessages.push(message);
+      })),
     }),
     {
       name: LOCAL_STORAGE_APP_DATA_KEY,

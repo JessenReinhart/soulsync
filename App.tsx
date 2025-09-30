@@ -1,3 +1,4 @@
+import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom';
 import React, { useEffect, useState } from 'react';
 import DesktopTabbar from './components/DesktopTabbar';
 import BottomNavbar from './components/BottomNavbar';
@@ -21,10 +22,10 @@ export interface TabItemConfig {
   icon: string;
 }
 
-const App: React.FC = () => {
+const AppContent: React.FC = () => {
   const theme = useAppStore(state => state.settings.theme);
-  const [currentView, setCurrentView] = useState<ViewId>('journal'); // Default view
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const navigate = useNavigate();
 
   useEffect(() => {
     applyThemeToDOM(theme);
@@ -44,29 +45,18 @@ const App: React.FC = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const navigateTo = (viewId: ViewId) => {
-    setCurrentView(viewId);
-  };
-
   const tabItems: TabItemConfig[] = [
     { viewId: 'journal', label: 'Journal', icon: 'calendar' },
     { viewId: 'analytics', label: 'Analytics', icon: 'barChart' },
     { viewId: 'settings', label: 'Settings', icon: 'settings' },
   ];
 
-  const currentTab = tabItems.find(item => item.viewId === currentView);
+  // Determine current view based on URL path
+  const currentPath = window.location.pathname;
+  const currentView = (tabItems.find(item => `/${item.viewId}` === currentPath)?.viewId || 'journal') as ViewId;
 
-  const renderView = () => {
-    switch (currentView) {
-      case 'journal':
-        return <JournalPage />;
-      case 'analytics':
-        return <AnalyticsPage />;
-      case 'settings':
-        return <SettingsPage />;
-      default:
-        return <JournalPage />; // Fallback to journal view
-    }
+  const handleNavigate = (viewId: ViewId) => {
+    navigate(`/${viewId}`);
   };
 
   return (
@@ -75,11 +65,11 @@ const App: React.FC = () => {
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           <img src={navimage} className='h-12 dark:hidden' alt="Logo" />
           <img src={navimageDark} className='h-12 dark:block hidden' alt="Logo" />
-          {currentTab && !isMobile && <span className="text-xl text-textLight dark:text-textDark hidden md:block">{currentTab.label}</span>}
+          {currentView && !isMobile && <span className="text-xl text-textLight dark:text-textDark hidden md:block">{tabItems.find(item => item.viewId === currentView)?.label}</span>}
           <div className="md:hidden"> {/* Placeholder */}
           </div>
         </div>
-        {!isMobile && <DesktopTabbar items={tabItems} currentView={currentView} navigateTo={navigateTo} />}
+        {!isMobile && <DesktopTabbar items={tabItems} currentView={currentView} navigateTo={handleNavigate} />}
       </header>
 
       <main className="flex-grow container mx-auto px-4 py-8 relative">
@@ -92,16 +82,27 @@ const App: React.FC = () => {
             transition={{ duration: 0.3 }}
             className="w-full"
           >
-            {renderView()}
+            <Routes>
+              <Route path="/journal" element={<JournalPage />} />
+              <Route path="/analytics" element={<AnalyticsPage />} />
+              <Route path="/settings" element={<SettingsPage />} />
+              <Route path="*" element={<JournalPage />} /> {/* Default route */}
+            </Routes>
           </motion.div>
         </AnimatePresence>
       </main>
 
       <Footer />
-      {isMobile && <BottomNavbar items={tabItems} currentView={currentView} navigateTo={navigateTo} />}
+      {isMobile && <BottomNavbar items={tabItems} currentView={currentView} navigateTo={handleNavigate} />}
       <ChatPopup />
     </div>
   );
 };
+
+const App: React.FC = () => (
+  <BrowserRouter>
+    <AppContent />
+  </BrowserRouter>
+);
 
 export default App;

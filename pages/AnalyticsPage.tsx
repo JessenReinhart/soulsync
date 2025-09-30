@@ -9,10 +9,12 @@ import { MOOD_OPTIONS } from "../constants";
 import { useAppStore } from "../store/appStore";
 import { MoodLevel } from "../types";
 import { getCompletion } from "../utils/openrouter";
+import { useNavigate } from "react-router-dom";
 
 const AnalyticsPage: React.FC = () => {
   const entries = useAppStore((state) => state.entries);
-  const { toggleChat, setChatMessages } = useAppStore();
+  const { toggleChat, setChatMessages, settings } = useAppStore();
+  const navigate = useNavigate();
 
   const memoizedEntries = useMemo(() => entries, [entries]);
 
@@ -161,9 +163,21 @@ const AnalyticsPage: React.FC = () => {
         <p className="text-xs text-textLight dark:text-textDark opacity-60 mt-1 mb-4">
           Get an AI-powered summary of your recent journal entries.
         </p>
-        <Button onClick={handleSummarize} disabled={loading}>
+        <Button onClick={handleSummarize} disabled={loading || !settings.openRouterApiKey}>
           {loading ? "Generating..." : "Summarize My Journal"}
         </Button>
+        {!settings.openRouterApiKey && (
+          <p className="text-sm text-red-500 dark:text-red-400 mt-2">
+            Please set your OpenRouter API key in the{" "}
+            <span
+              className="font-semibold underline cursor-pointer"
+              onClick={() => navigate("/settings")}
+            >
+              Settings
+            </span>{" "}
+            to use AI features.
+          </p>
+        )}
         {summary && (
           <div className="mt-4 text-textLight dark:text-textDark">
             <ReactMarkdown>{summary}</ReactMarkdown>

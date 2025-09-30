@@ -1,17 +1,15 @@
 import React from 'react';
-// Removed: import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import Icon from './common/Icon';
 import ToggleSwitch from './common/ToggleSwitch';
 import { useAppStore } from '../store/appStore';
-import { ViewId, TabItemConfig } from '../App'; // Import ViewId and TabItemConfig
+import { TabItemConfig } from '../App'; // Import ViewId and TabItemConfig
 
 interface DesktopTabbarProps {
   items: TabItemConfig[];
-  currentView: ViewId;
-  navigateTo: (viewId: ViewId) => void;
 }
 
-const DesktopTabbar: React.FC<DesktopTabbarProps> = ({ items, currentView, navigateTo }) => {
+const DesktopTabbar: React.FC<DesktopTabbarProps> = ({ items }) => {
   const theme = useAppStore(state => state.settings.theme);
   const toggleThemeAction = useAppStore(state => state.toggleTheme);
 
@@ -24,15 +22,16 @@ const DesktopTabbar: React.FC<DesktopTabbarProps> = ({ items, currentView, navig
       <div className="container mx-auto px-4 flex justify-between items-center">
         <nav className="flex space-x-2">
           {items.map(item => (
-            <button
+            <NavLink
               key={item.viewId}
-              onClick={() => navigateTo(item.viewId)}
-              className={`${linkBaseClass} ${currentView === item.viewId ? activeLinkClass : inactiveLinkClass}`}
-              aria-current={currentView === item.viewId ? 'page' : undefined}
+              to={`/${item.viewId}`}
+              className={({ isActive }) =>
+                `${linkBaseClass} ${isActive ? activeLinkClass : inactiveLinkClass}`
+              }
             >
               <Icon name={item.icon} size={18} className="mr-2" />
               {item.label}
-            </button>
+            </NavLink>
           ))}
         </nav>
         <div className="py-2">
